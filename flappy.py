@@ -1,4 +1,4 @@
-import pygame      # 6-1 导入 random 模块
+import pygame, random, tools
 pygame.init()
 
 width = 288
@@ -9,8 +9,8 @@ clock = pygame.time.Clock()
 FLY = 20001
 pygame.time.set_timer(FLY, 200)
 
-# 3. 创建PIPE自定义事件，用来控制生成管道
-
+PIPE = 20002
+pygame.time.set_timer(PIPE, 3000)
 
 window = pygame.display.set_mode((width, height))
 pygame.display.set_caption('flappy bird')
@@ -38,16 +38,24 @@ images['floor'] = pygame.image.load('images/base.png')
 floor_rect = images['floor'].get_rect()
 floor_rect.y = height*0.8
 
-# 2. 字典添加键，pipe_down 存储画面下方的管道图片， pipe_up 存储画面上方的管道图片
+images['pipe_down'] = pygame.image.load('images/pipe-green.png')
+images['pipe_up'] = pygame.transform.flip(images['pipe_down'], False, True)
+
+pipe_img = []
+pipe_rect = []
+
+# 6. 加载gameover图片存储在字典中,并获取矩形区域，设置为屏幕中心位置
 
 
 
-# 5. 创建2个空列表，分别存储管道图片和管道矩形区域
-
+# 8. 加载音频存储在字典 sound 中
 
 
 v = -15
 g = 1
+
+# 1. 创建变量 GAMEOVER 控制游戏状态
+
 
 while True:
     for event in pygame.event.get():
@@ -58,18 +66,23 @@ while True:
             index = index + 1
             index = index % 3
 
-        # 4. 判断PIPE事件，打印输出event
-
-
-
-            # 6. 随机生成画面上方管道的y坐标，并将管道图片和矩形区域添加至列表中
-
-
+        if event.type == PIPE:
+            y = random.randint(100, 200)
+            up = images['pipe_up'].get_rect()
+            up.bottomleft = (width, y)
+            down = images['pipe_down'].get_rect()
+            down.topleft = (width, y+100)
+            pipe_img.append(images['pipe_up'])
+            pipe_img.append(images['pipe_down'])
+            pipe_rect.append(up)
+            pipe_rect.append(down)
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_1: color = 'red'
             if event.key == pygame.K_2: color = 'yellow'
             if event.key == pygame.K_3: color = 'blue'
+
+            # 5. 设置游戏未结束时才能进行跳跃操作
             if event.key == pygame.K_SPACE: v = -10
 
 
@@ -81,15 +94,25 @@ while True:
 
     window.blit(images['bg'], (0, 0))
 
-    # 8. for循环控制管道移动
+    # 2. 判断 GAMEOVER 变量，游戏没有结束时，才移动管道和碰撞检测
+
+    for rect, img in zip(pipe_rect, pipe_img):
+        rect.x -= 1
+        if rect.x < -width:
+            pipe_rect.remove(rect)
+            pipe_img.remove(img)
+
+        # 3. 管道碰撞检测
+
+
+
+                # 4. 检测成功，修改 GAMEOVER 变量
 
 
 
 
-    # 7. for循环绘制管道图片
-
-
-
+    for rect, img in zip(pipe_rect, pipe_img):
+        window.blit(img, rect)
 
     v += g
     bird_rect.y += v
@@ -100,14 +123,18 @@ while True:
     if bird_rect.right > width: bird_rect.right = width
     if bird_rect.top < 0: bird_rect.top = 0
 
-    # 1. 创建 bird 变量存储根据速度旋转后的小鸟图片
-
-
-    window.blit(images[color][index], bird_rect) # 1.1 修改为绘制旋转后的图片
+    bird = pygame.transform.rotate(images[color][index], v)
+    window.blit(bird, bird_rect)
 
     floor_rect.x -= 1
     floor_rect.x %= -48
     window.blit(images['floor'], floor_rect)
+
+    # 7. 判断游戏结束，绘制结束图片
+
+
+    # 9. 显示分数
+
 
     pygame.display.update()
     clock.tick(30)
